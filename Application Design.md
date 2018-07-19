@@ -26,12 +26,13 @@ By definition "architectural dimensions" are orthogonal; changes in one do not i
   - Dates
   - Time Intervals
   - Numbers
-  - Units
+  - Units/Measurements
   - Location
   - Phone Number
   - Inflector (Pluralization)
   - Currency
   - Person Names
+  - Organization Names
   - Addresses
 - Accessibility - 508 Compliance
 - Layout - includes font sizes
@@ -39,7 +40,7 @@ By definition "architectural dimensions" are orthogonal; changes in one do not i
   - Routes between scenes (Segues)
   - Data handoff
   - Visual Transitions
-- Scene - view hierarchy
+- Scene - view hierarchy, logical composition
 - Data Bindings - Domain values to renderings
   - Data -> (Formatter) -> String -> (Label | TextField) 
   - Data -> Image -> ImageView
@@ -51,14 +52,22 @@ By definition "architectural dimensions" are orthogonal; changes in one do not i
 - Network Services
   - Authentication
   - Requests (eg. GET, POST)
-  - Object marshaling
+  - Object marshaling (see Schema.Mappings)
 - Schema
+  - Types
+  - Relationships
+  - Default Values
+  - ACL
+  - Validation Rules
+  - Default Formatters
+  - Mappings - Relational|JSON|REST|GraphQL <-> DomainModel
 - Domain Logic
 - Application Reporting (Logging and Metrics) - Calls to Action
 
 - Application Data (base)
-  - Security / Access Control
+  - Security / Access Control / Encryption
   - User preferences
+  - Persistance
   - Caching
   - Synchronization
 - Application State
