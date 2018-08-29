@@ -35,12 +35,12 @@ By definition "architectural dimensions" are orthogonal; changes in one do not i
   - Organization Names
   - Addresses
 - Accessibility - 508 Compliance
-- Layout - includes font sizes
+- Scene - view hierarchy, logical composition, layout independent
+- Layout - spacing, sizing, etc. includes font sizes
 - Navigation Controllers
   - Routes between scenes (Segues)
   - Data handoff
   - Visual Transitions
-- Scene - view hierarchy, logical composition
 - Data Bindings - Domain values to renderings
   - Data -> (Formatter) -> String -> (Label | TextField) 
   - Data -> Image -> ImageView
