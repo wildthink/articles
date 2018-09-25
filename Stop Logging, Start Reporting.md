@@ -16,11 +16,11 @@ Milestones - marks the progress of a process or activity, a good point to gather
 
 Trace - Small, incremental steps in execution
 
-Limiting or Blocking - security, permissions, resource scarcity (file space, bandwidth)
+Limiting or Blocking - security, permissions, resource scarcity, missing asset (file space, bandwidth)
 
 Deadlock
 
-Unexpected Value
+Unexpected or Missing Value
 
 Data Corruption - purge corrupted data, reload if possible
 
