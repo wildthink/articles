@@ -191,6 +191,47 @@ class SimpleStore: UIResponder, Store, ReadableStore {
 
 [Unidirectional Data Flow? Yes. Flux? I Am Not So Sure.](https://medium.com/@AdamRNeary/unidirectional-data-flow-yes-flux-i-am-not-so-sure-b4acf988196c)
 
+##### Alternatives
+
+[Weaver](https://github.com/scribd/Weaver)
+
+```
+-------------------------------------------------------------------------------
+Language                     files          blank        comment           code
+-------------------------------------------------------------------------------
+Swift                           93           1678            946           6103
+Markdown                         7            168              0            315
+JSON                             1              0              0             93
+Objective C                      1             26              7             64
+make                             1              9              0             28
+YAML                             3              0              0             27
+Bourne Shell                     1              6              0             19
+C/C++ Header                     3             14             20             11
+-------------------------------------------------------------------------------
+SUM:                           110           1901            973           6660
+-------------------------------------------------------------------------------
+```
+
+[Swinject](https://github.com/Swinject)
+
+```
+-------------------------------------------------------------------------------
+Language                     files          blank        comment           code
+-------------------------------------------------------------------------------
+Swift                          142           2440           2920          12410
+Markdown                        36           1830              0           4946
+Objective C                     15            218            121            728
+C/C++ Header                    10            173            171            634
+C                                1            103             45            389
+YAML                             6              4              2            224
+ERB                              2             14              0            126
+Ruby                             1             12              0             60
+Bourne Shell                     1              2              0              6
+-------------------------------------------------------------------------------
+SUM:                           214           4796           3259          19523
+-------------------------------------------------------------------------------
+```
+
 FB flux![unidirectional data flow in Flux](https://facebook.github.io/flux/img/flux-simple-f8-diagram-1300w.png)
 
 ![data flow in Flux with data originating from user interactions](https://facebook.github.io/flux/img/flux-simple-f8-diagram-with-client-action-1300w.png)
