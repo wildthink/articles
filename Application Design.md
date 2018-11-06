@@ -77,6 +77,35 @@ By definition "architectural dimensions" are orthogonal; changes in one do not i
   - Recall `autosaveName` 
   - Easy to archive the `query` instead of the `object` !!
 
+#### States
+
+- Domain model values
+- UI parameters
+  - layout
+  - style
+  - Visible/hidden
+- Navigation State
+  - Current scene
+  - Transition status
+  - Next scene
+
+#### Input Events
+
+- Touch/mouse gestures
+- Keyboard
+- Network
+- Timer
+- Microphone
+- Other Sensors
+
+#### Output Events
+
+Output is, by definition, ephemeral. Thus, distinctions in display should distinguish between those that are "events" versus a direct reflection of state. The emission event may be documented but otherwise leaves no lasting state within the system.
+
+- Video / Animation
+- Sound / Voice
+- Network
+
 #### TeXInfo
 
 Node Specification
