@@ -15,7 +15,7 @@ In one direction, these bindings map model values to viewable elements; displayi
 
 UDF looks to reduce the complexity of wiring up the component views and view controllers and to break the feedback loop caused by the <u>automatic</u> triggering of display refreshes caused by interdependent observer chains watching for changes in the model state.
 
-We eliminate the need to pass references down through the view hierarchy by using the responder chain which is already in place. This makes it easy for any UIResponders in the hierarchy to opt-in to updates without the need to refactor any containing components.
+We eliminate the need for explicit dependency injection (passing references down through the view hierarchy during construction) by using the responder chain which is already in place as the message router. This makes it easy for any UIResponders in the hierarchy to opt-in to provide services or settings without the need to refactor any containing components.
 
 In addition, we implement the dispatching mechanism such that if can gather all updates to the store into a single step so that updates to the views are also executed in a single step so that we can insure the store is immutable for the duration of the updates.
 
