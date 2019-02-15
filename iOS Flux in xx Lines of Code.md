@@ -1,19 +1,19 @@
-## iOS Flux in ~100 Lines of Code
+## iOS UDF in ~100 Lines of Code
 
-It appears that few are aware of a "message bus" that is built into every iOS application; the **Responder Chain**. It's not just for IBActions and event processing; it can be quite useful in a number of scenarios. Utilizing this graph, we will implement a Flux framework in less than 100 lines of code! This framework, implemented with a single class and 2 extension methods, can support multiple `Stores` and can easily be extended with your own custom action functions. In addition, updates to the store can be applied in a single transaction as are all calls to update the UI based on the new state of the store.
+It appears that few are aware of a "message bus" that is built into every iOS application; the **Responder Chain**. It's not just for IBActions and event processing; it can be quite useful in a number of scenarios. Utilizing this graph, we will implement a UDF framework in less than 100 lines of code! This framework, implemented with a single class and 2 extension methods, can support multiple `Stores` and can easily be extended with your own custom action functions. In addition, updates to the store can be applied in a single transaction as are all calls to update the UI based on the new state of the store.
 
 #### What is Unidirectional Data Flow?
 
 We will try to make this article self-contained but some knowledge of the UDF design pattern might be helpful to your understanding. If you need a more detailed explanation please see [Flux, Application Architecture for Building User Interfaces](https://facebook.github.io/flux/docs/in-depth-overview.html#content).
 
-Briefly, the Flux pattern is designed to address issues related to the update of the an application's interface (views) that are driven by changes in the state of the underlying model.
+Briefly, the UDF pattern is designed to address issues related to the update of the an application's interface (views) that are driven by changes in the state of the underlying model.
 
 > "We found that two-way data bindings led to cascading updates, where changing one object led to another object changing, which could also trigger more updates. As applications grew, these cascading updates made it very difficult to predict what would change as the result of one user interaction. When updates can only change data within a single round, the system as a whole becomes more predictable." ([FB](https://facebook.github.io/flux/docs/in-depth-overview.html#content))
 >
 
 In one direction, these bindings map model values to viewable elements; displaying a person's name in a text field, for example. In the other direction, editing the value in the text field updates the person's name in the model to a new value. This, in turn, may trigger other operations that update different model values, *ad infinitum*. In some cases, this can create feedback triggering multiple unnecessary display refreshes creating lags in application responsiveness.
 
-Flux looks to reduce the complexity of wiring up the component views and view controllers and to break the feedback loop caused by the <u>automatic</u> triggering of display refreshes caused by interdependent observer chains watching for changes in the model state.
+UDF looks to reduce the complexity of wiring up the component views and view controllers and to break the feedback loop caused by the <u>automatic</u> triggering of display refreshes caused by interdependent observer chains watching for changes in the model state.
 
 We eliminate the need to pass references down through the view hierarchy by using the responder chain which is already in place. This makes it easy for any UIResponders in the hierarchy to opt-in to updates without the need to refactor any containing components.
 
@@ -55,7 +55,7 @@ Any view or controller that <u>declares</u> that it is bound to store or state v
 
 #### Eliminate Actions by bringing the target to the caller.
 
-An `Action` in the Flux environment is really just a serialized form of a particular function identifier along with its parameters. This `action` is passed along to some target by the `Dispatcher`. Then the target must deserialize the `Action` and implement its intent. Not only does this incur CPU and memory costs but it also requires additional code and cognitive overhead to create, maintain, and utilize each explicitly specified `Action`.
+An `Action` in the UDF environment is really just a serialized form of a particular function identifier along with its parameters. This `action` is passed along to some target by the `Dispatcher`. Then the target must deserialize the `Action` and implement its intent. Not only does this incur CPU and memory costs but it also requires additional code and cognitive overhead to create, maintain, and utilize each explicitly specified `Action`.
 
 How might this be avoided? If the target of our action method was in-hand we could just call the function directly. But explicitly wiring up the caller to the target introduces complexities that we are seeking to avoid with a central Dispatcher.
 
