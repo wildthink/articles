@@ -73,7 +73,7 @@ Message recipients can be identified by Class, Protocol, or by an arbitrary test
 ```swift
 extension UIResponder {
 
-    func myStore<S: Store>(if f: ((S) -> Bool) = {_ in return true}) -> S? {
+    func myStore<S: Store>(_ type: S.Type, if f: ((S) -> Bool) = {_ in return true}) -> S? {
         var target: UIResponder? = self
         while target != nil {
             if let store = target as? S, f(store) {
@@ -209,13 +209,13 @@ extension SimpleStore: LoginManager {
 For eases sake, our AppDelegate (a Responder) is already in the responder chain so we will have it do double duty as the Store (q.v.). And then the IBAction for the Login submit button is straight forward.
 
 ```swift
-@IBAction func submitLogin((_ sender: Any) {
-    let username = userNameField.text
-    let password = userPasswordField.text
-    
-    myStore(LoginManager.self) {
-        $0.login (name: username, pass: password)
-    }
+@IBAction func submitLogin(_ sender: Any) {
+    let username = "fred"
+    let password = "open"
+
+    if let store = myStore(Store.self) {}
+	    store.login(name: username, pass: password)
+	}
 }
 ```
 
