@@ -21,20 +21,18 @@ In addition, we implement the dispatching mechanism such that if can gather all 
 
 #### Design Overview
 
-![data flow in Flux with data originating from user interactions](https://facebook.github.io/flux/img/flux-simple-f8-diagram-with-client-action-1300w.png)
-
 Each view refresh cycle is composed of the following functions:
 
 ​	Update Store -> Update Responders -> Update Controllers -> Update Views
 
 #### A Simple Store
 
-> Stores contain the application state and logic. Their role is somewhat similar to a model in a traditional MVC, but they manage the state of many objects — they do not represent a single record of data like ORM models do. … stores manage the application state for a particular **domain** within the application.
+> Stores contain the application state and logic. Their role is somewhat similar to a model in a traditional MVC, but they manage the state of many objects — they do not represent a single record of data like ORM models do. … stores manage the application state for a particular **domain** within the application.
 >
 > ([FB](https://facebook.github.io/flux/docs/in-depth-overview.html#content))
 
 
-Only two methods are needed to create the simplest `Store`. The addition of the `@objc protocol`  provides a bridging function for `UIResponders` to call during their `update(...)`.
+For our example, only two methods are needed to create the simplest `Store`. The addition of the `@objc protocol`  provides a bridging function for `UIResponders` to call during their `update(...)`.
 
 ```swift
 protocol Store {
@@ -49,27 +47,27 @@ protocol Store {
 }
 ```
 
-Any view or controller that <u>declares</u> that it is bound to store or state variable is <u>implicitly</u> subscribed to its updates. As views and controllers come and go at the whim of the user this becomes a significant advantage in reducing complexity and error.
+Any view or controller whose `storageKey` property is set has effectively "declared" that it is "bound" to store or state variable and is <u>implicitly</u> subscribed to notifications of its updates. As views and controllers come and go at the whim of the user's navigational maneuvers (see [Monkey Testing](https://en.wikipedia.org/wiki/Monkey_testing) this becomes a significant advantage in reducing complexity and error.
 
 #### Simplify the Dispatch
 
 #### Eliminate Actions by bringing the target to the caller.
 
-An `Action` in the UDF environment is really just a serialized form of a particular function identifier along with its parameters. This `action` is passed along to some target by the `Dispatcher`. Then the target must deserialize the `Action` and implement its intent. Not only does this incur CPU and memory costs but it also requires additional code and cognitive overhead to create, maintain, and utilize each explicitly specified `Action`.
+An `Action` in the UDF environment is really just a serialized form of a particular function identifier along with its parameters. This `action` is passed along to some target by the `Dispatcher`. Then the Target must deserialize the `Action` and invoke an implementations of its intent. Not only does this incur CPU and memory costs (minor though they may be) but it also requires additional code and cognitive overhead to create, maintain, and utilize each explicitly specified `Action` among different parts of the code base.
 
 How might this be avoided? If the target of our action method was in-hand we could just call the function directly. But explicitly wiring up the caller to the target introduces complexities that we are seeking to avoid with a central Dispatcher.
 
 Suppose, instead, the Dispatcher's job is to facilitate a rendezvous between the caller and the callee dynamically at call time. All without pre-wiring or instantiating Actions. To effect this, the caller requests a reference to the target, a `Store` in our case, by specifying the Class or Protocol, with this strongly typed reference the caller can then invoke any exposed function it requires. The caller never retains the target but can always get it just-in-time for the call.
 
-By creating a direct connection between the caller and target on-demand and only for the duration of the call we avoid any need to explicitly define much less create Action objects to "carry" values to the message receiver. The "Dispatcher" may, at its discretion, store the parameters or create a closure to delay the action's execution. Note, this logic is encapsulated in the Dispatcher so the caller need not concern itself with any explicit instantiation of an `Action` object.
+By creating a direct connection between the caller and target on-demand and only for the duration of the call we avoid any need to explicitly define much less create Action objects to "carry" values to the message receiver. The "Target" may, at its discretion, store the an "action identifier" and its parameters or create a closure to delay the action's execution. Note, this logic is encapsulated in the Target so the caller need not concern itself with any explicit instantiation of an `Action` object.
 
-In our example, user actions are translated into operations on the store at the earliest opportunity. Action code blocks are queued up executed in a single phase, callback free. If desired access to the store can be formally "locked" effectively wrapping all the updates in a single transaction.
+In our example, user actions are translated into operations on the store at the earliest opportunity. Action code blocks are queued up executed in a single phase, callback free. If desired, access to the store could be formally "locked" effectively wrapping all the updates in a single transaction.
 
-So Simple. No `Actions` required!
+Simple. No `Actions` required!
 
 #### Single Function Store Lookup
 
-Message recipients can be identified by Class, Protocol, or by an arbitrary test.
+Message recipients can be identified by Class, Protocol, or by an arbitrary test. Starting at the calling Responder, the logic for the `dispatch()` is to simply climb up the tree looking for a qualifying object. We needn't be tied to exactly this logic but it will suffice for our example.
 
 
 ```swift
@@ -171,6 +169,56 @@ class SimpleStore: UIResponder, Store, ReadableStore {
 }
 ```
 
+The astute reader will notice that `update(view:)`  may be called multiple times on the same view in a single update cycle when view controllers are nested in the same window/root view. However, since the state will not have changed within the scope of the update this only results in redundant in extra CPU work. This will be addressed in an upcoming release :-).
+
+And to make things type safe and a bit prettier in use.
+
+```swift
+protocol LoginManager {
+    func login(name: String, pass: String)
+    func logout()
+}
+
+extension SimpleStore: LoginManager {
+    
+    func login(name: String, pass: String) -> Bool {
+        // This is JUST a demo afterall
+        return true
+    }
+
+    func login(name: String, pass: String) {
+        if isValidUser(name: name, pass: pass)  {
+            self.set ("username", to: name)
+            self.set ("password", to: pass.hash)
+            self.set ("userIsLogedIn", to: true)
+        } else {
+            self.set ("userIsLogedIn", to: false)
+        }
+    }
+    
+    func logout()  {
+    	self.set ("username", to: nil)
+        self.set ("password", to: nil)
+        self.set ("userIsLogedIn", to: false)
+    }
+}
+```
+
+
+
+For eases sake, our AppDelegate (a Responder) is already in the responder chain so we will have it do double duty as the Store (q.v.). And then the IBAction for the Login submit button is straight forward.
+
+```swift
+@IBAction func submitLogin((_ sender: Any) {
+    let username = userNameField.text
+    let password = userPasswordField.text
+    
+    myStore(LoginManager.self) {
+        $0.login (name: username, pass: password)
+    }
+}
+```
+
 
 
 ##### Links
@@ -252,6 +300,8 @@ SUM:                           631          19644          10831         68,855
 -------------------------------------------------------------------------------
 ```
 
-FB flux![unidirectional data flow in Flux](https://facebook.github.io/flux/img/flux-simple-f8-diagram-1300w.png)
+
+
+FB flux reference images![unidirectional data flow in Flux](https://facebook.github.io/flux/img/flux-simple-f8-diagram-1300w.png)
 
 ![data flow in Flux with data originating from user interactions](https://facebook.github.io/flux/img/flux-simple-f8-diagram-with-client-action-1300w.png)
