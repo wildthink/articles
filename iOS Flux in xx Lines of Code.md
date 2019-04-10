@@ -1,27 +1,25 @@
-## iOS Flux in ~100 Lines of Code
+## iOS UDF in ~100 Lines of Code
 
-It appears that few are aware of a "message bus" that is built into every iOS application; the **Responder Chain**. It's not just for IBActions and event processing; it can be quite useful in a number of scenarios. Utilizing this graph, we will implement a Flux framework in less than 100 lines of code! This framework, implemented with a single class and 2 extension methods, can support multiple `Stores` and can easily be extended with your own custom action functions. In addition, updates to the store can be applied in a single transaction as are all calls to update the UI based on the new state of the store.
+It appears that few are aware of a "message bus" that is built into every iOS application; the **Responder Chain**. It's not just for IBActions and event processing; it can be quite useful in a number of scenarios. Utilizing this graph, we will implement a UDF framework in less than 100 lines of code! This framework, implemented with a single class and 2 extension methods, can support multiple `Stores` and can easily be extended with your own custom action functions. In addition, updates to the store can be applied in a single transaction as are all calls to update the UI based on the new state of the store.
 
 #### What is Unidirectional Data Flow?
 
 We will try to make this article self-contained but some knowledge of the UDF design pattern might be helpful to your understanding. If you need a more detailed explanation please see [Flux, Application Architecture for Building User Interfaces](https://facebook.github.io/flux/docs/in-depth-overview.html#content).
 
-Briefly, the Flux pattern is designed to address issues related to the update of the an application's interface (views) that are driven by changes in the state of the underlying model.
+Briefly, the UDF pattern is designed to address issues related to the update of the an application's interface (views) that are driven by changes in the state of the underlying model.
 
 > "We found that two-way data bindings led to cascading updates, where changing one object led to another object changing, which could also trigger more updates. As applications grew, these cascading updates made it very difficult to predict what would change as the result of one user interaction. When updates can only change data within a single round, the system as a whole becomes more predictable." ([FB](https://facebook.github.io/flux/docs/in-depth-overview.html#content))
 >
 
 In one direction, these bindings map model values to viewable elements; displaying a person's name in a text field, for example. In the other direction, editing the value in the text field updates the person's name in the model to a new value. This, in turn, may trigger other operations that update different model values, *ad infinitum*. In some cases, this can create feedback triggering multiple unnecessary display refreshes creating lags in application responsiveness.
 
-Flux looks to reduce the complexity of wiring up the component views and view controllers and to break the feedback loop caused by the <u>automatic</u> triggering of display refreshes caused by interdependent observer chains watching for changes in the model state.
+UDF looks to reduce the complexity of wiring up the component views and view controllers and to break the feedback loop caused by the <u>automatic</u> triggering of display refreshes caused by interdependent observer chains watching for changes in the model state.
 
-We eliminate the need to pass references down through the view hierarchy by using the responder chain which is already in place. This makes it easy for any UIResponders in the hierarchy to opt-in to updates without the need to refactor any containing components.
+We eliminate the need for explicit dependency injection (passing references down through the view hierarchy during construction) by using the responder chain which is already in place as the message router. This makes it easy for any UIResponders in the hierarchy to opt-in to provide services or settings without the need to refactor any containing components.
 
 In addition, we implement the dispatching mechanism such that if can gather all updates to the store into a single step so that updates to the views are also executed in a single step so that we can insure the store is immutable for the duration of the updates.
 
 #### Design Overview
-
-![data flow in Flux with data originating from user interactions](https://facebook.github.io/flux/img/flux-simple-f8-diagram-with-client-action-1300w.png)
 
 Each view refresh cycle is composed of the following functions:
 
@@ -29,12 +27,12 @@ Each view refresh cycle is composed of the following functions:
 
 #### A Simple Store
 
-> Stores contain the application state and logic. Their role is somewhat similar to a model in a traditional MVC, but they manage the state of many objects — they do not represent a single record of data like ORM models do. … stores manage the application state for a particular **domain** within the application.
+> Stores contain the application state and logic. Their role is somewhat similar to a model in a traditional MVC, but they manage the state of many objects — they do not represent a single record of data like ORM models do. … stores manage the application state for a particular **domain** within the application.
 >
 > ([FB](https://facebook.github.io/flux/docs/in-depth-overview.html#content))
 
 
-Only two methods are needed to create the simplest `Store`. The addition of the `@objc protocol`  provides a bridging function for `UIResponders` to call during their `update(...)`.
+For our example, only two methods are needed to create the simplest `Store`. The addition of the `@objc protocol`  provides a bridging function for `UIResponders` to call during their `update(...)`.
 
 ```swift
 protocol Store {
@@ -49,33 +47,33 @@ protocol Store {
 }
 ```
 
-Any view or controller that <u>declares</u> that it is bound to store or state variable is <u>implicitly</u> subscribed to its updates. As views and controllers come and go at the whim of the user this becomes a significant advantage in reducing complexity and error.
+Any view or controller whose `storageKey` property is set has effectively "declared" that it is "bound" to store or state variable and is <u>implicitly</u> subscribed to notifications of its updates. As views and controllers come and go at the whim of the user's navigational maneuvers (see [Monkey Testing](https://en.wikipedia.org/wiki/Monkey_testing) this becomes a significant advantage in reducing complexity and error.
 
 #### Simplify the Dispatch
 
 #### Eliminate Actions by bringing the target to the caller.
 
-An `Action` in the Flux environment is really just a serialized form of a particular function identifier along with its parameters. This `action` is passed along to some target by the `Dispatcher`. Then the target must deserialize the `Action` and implement its intent. Not only does this incur CPU and memory costs but it also requires additional code and cognitive overhead to create, maintain, and utilize each explicitly specified `Action`.
+An `Action` in the UDF environment is really just a serialized form of a particular function identifier along with its parameters. This `action` is passed along to some target by the `Dispatcher`. Then the Target must deserialize the `Action` and invoke an implementations of its intent. Not only does this incur CPU and memory costs (minor though they may be) but it also requires additional code and cognitive overhead to create, maintain, and utilize each explicitly specified `Action` among different parts of the code base.
 
 How might this be avoided? If the target of our action method was in-hand we could just call the function directly. But explicitly wiring up the caller to the target introduces complexities that we are seeking to avoid with a central Dispatcher.
 
 Suppose, instead, the Dispatcher's job is to facilitate a rendezvous between the caller and the callee dynamically at call time. All without pre-wiring or instantiating Actions. To effect this, the caller requests a reference to the target, a `Store` in our case, by specifying the Class or Protocol, with this strongly typed reference the caller can then invoke any exposed function it requires. The caller never retains the target but can always get it just-in-time for the call.
 
-By creating a direct connection between the caller and target on-demand and only for the duration of the call we avoid any need to explicitly define much less create Action objects to "carry" values to the message receiver. The "Dispatcher" may, at its discretion, store the parameters or create a closure to delay the action's execution. Note, this logic is encapsulated in the Dispatcher so the caller need not concern itself with any explicit instantiation of an `Action` object.
+By creating a direct connection between the caller and target on-demand and only for the duration of the call we avoid any need to explicitly define much less create Action objects to "carry" values to the message receiver. The "Target" may, at its discretion, store the an "action identifier" and its parameters or create a closure to delay the action's execution. Note, this logic is encapsulated in the Target so the caller need not concern itself with any explicit instantiation of an `Action` object.
 
-In our example, user actions are translated into operations on the store at the earliest opportunity. Action code blocks are queued up executed in a single phase, callback free. If desired access to the store can be formally "locked" effectively wrapping all the updates in a single transaction.
+In our example, user actions are translated into operations on the store at the earliest opportunity. Action code blocks are queued up executed in a single phase, callback free. If desired, access to the store could be formally "locked" effectively wrapping all the updates in a single transaction.
 
-So Simple. No `Actions` required!
+Simple. No `Actions` required!
 
 #### Single Function Store Lookup
 
-Message recipients can be identified by Class, Protocol, or by an arbitrary test.
+Message recipients can be identified by Class, Protocol, or by an arbitrary test. Starting at the calling Responder, the logic for the `dispatch()` is to simply climb up the tree looking for a qualifying object. We needn't be tied to exactly this logic but it will suffice for our example.
 
 
 ```swift
 extension UIResponder {
 
-    func myStore<S: Store>(if f: ((S) -> Bool) = {_ in return true}) -> S? {
+    func myStore<S: Store>(_ type: S.Type, if f: ((S) -> Bool) = {_ in return true}) -> S? {
         var target: UIResponder? = self
         while target != nil {
             if let store = target as? S, f(store) {
@@ -171,6 +169,56 @@ class SimpleStore: UIResponder, Store, ReadableStore {
 }
 ```
 
+The astute reader will notice that `update(view:)`  may be called multiple times on the same view in a single update cycle when view controllers are nested in the same window/root view. However, since the state will not have changed within the scope of the update this only results in redundant in extra CPU work. This will be addressed in an upcoming release :-).
+
+And to make things type safe and a bit prettier in use.
+
+```swift
+protocol LoginManager {
+    func login(name: String, pass: String)
+    func logout()
+}
+
+extension SimpleStore: LoginManager {
+    
+    func login(name: String, pass: String) -> Bool {
+        // This is JUST a demo afterall
+        return true
+    }
+
+    func login(name: String, pass: String) {
+        if isValidUser(name: name, pass: pass)  {
+            self.set ("username", to: name)
+            self.set ("password", to: pass.hash)
+            self.set ("userIsLogedIn", to: true)
+        } else {
+            self.set ("userIsLogedIn", to: false)
+        }
+    }
+    
+    func logout()  {
+    	self.set ("username", to: nil)
+        self.set ("password", to: nil)
+        self.set ("userIsLogedIn", to: false)
+    }
+}
+```
+
+
+
+For eases sake, our AppDelegate (a Responder) is already in the responder chain so we will have it do double duty as the Store (q.v.). And then the IBAction for the Login submit button is straight forward.
+
+```swift
+@IBAction func submitLogin(_ sender: Any) {
+    let username = "fred"
+    let password = "open"
+
+    if let store = myStore(Store.self) {}
+	    store.login(name: username, pass: password)
+	}
+}
+```
+
 
 
 ##### Links
@@ -199,7 +247,7 @@ class SimpleStore: UIResponder, Store, ReadableStore {
 -------------------------------------------------------------------------------
 Language                     files          blank        comment           code
 -------------------------------------------------------------------------------
-Swift                           93           1678            946           6103
+Swift                           93           1678            946          6,103
 Markdown                         7            168              0            315
 JSON                             1              0              0             93
 Objective C                      1             26              7             64
@@ -208,7 +256,7 @@ YAML                             3              0              0             27
 Bourne Shell                     1              6              0             19
 C/C++ Header                     3             14             20             11
 -------------------------------------------------------------------------------
-SUM:                           110           1901            973           6660
+SUM:                           110           1901            973          6,660
 -------------------------------------------------------------------------------
 ```
 
@@ -218,7 +266,7 @@ SUM:                           110           1901            973           6660
 -------------------------------------------------------------------------------
 Language                     files          blank        comment           code
 -------------------------------------------------------------------------------
-Swift                          142           2440           2920          12410
+Swift                          142           2440           2920         12,410
 Markdown                        36           1830              0           4946
 Objective C                     15            218            121            728
 C/C++ Header                    10            173            171            634
@@ -228,10 +276,32 @@ ERB                              2             14              0            126
 Ruby                             1             12              0             60
 Bourne Shell                     1              2              0              6
 -------------------------------------------------------------------------------
-SUM:                           214           4796           3259          19523
+SUM:                           214           4796           3259         19,523
 -------------------------------------------------------------------------------
 ```
 
-FB flux![unidirectional data flow in Flux](https://facebook.github.io/flux/img/flux-simple-f8-diagram-1300w.png)
+[ReactiveX/RxSwift](https://github.com/ReactiveX/RxSwift)
+
+```
+-------------------------------------------------------------------------------
+Language                     files          blank        comment           code
+-------------------------------------------------------------------------------
+Swift                          573          17946          10534         62,509
+Markdown                        25           1181              0           3294
+Objective C                      5            293            110           1498
+Bourne Shell                     8             81             19            485
+YAML                             3             19              0            435
+C/C++ Header                    13            116            161            339
+JSON                             2              0              0            278
+Ruby                             1              8              0             17
+C                                1              0              7              0
+-------------------------------------------------------------------------------
+SUM:                           631          19644          10831         68,855
+-------------------------------------------------------------------------------
+```
+
+
+
+FB flux reference images![unidirectional data flow in Flux](https://facebook.github.io/flux/img/flux-simple-f8-diagram-1300w.png)
 
 ![data flow in Flux with data originating from user interactions](https://facebook.github.io/flux/img/flux-simple-f8-diagram-with-client-action-1300w.png)

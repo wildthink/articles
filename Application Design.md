@@ -94,7 +94,8 @@ By definition "architectural dimensions" are orthogonal; changes in one do not i
 - Touch/mouse gestures
 - Keyboard
 - Network
-- Timer
+- Timer Alarms
+- Notifications
 - Microphone
 - Other Sensors
 
