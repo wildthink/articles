@@ -106,6 +106,11 @@ Output is, by definition, ephemeral. Thus, distinctions in display should distin
 - Sound / Voice
 - Network
 
+#### Entity-Component System [*](https://en.wikipedia.org/wiki/Entity–component–system)
+
+- AnyRecord - id, primary type, types + dynamic properties
+- Adaptors
+
 #### TeXInfo
 
 Node Specification
