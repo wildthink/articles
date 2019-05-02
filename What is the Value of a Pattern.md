@@ -49,5 +49,6 @@ Given the same amount of code coverage, running 1 test with a 1000 different inp
 
 [Transactional Memory](https://en.wikipedia.org/wiki/Transactional_memory)
 
-#### 
+[MVC/MVP/MVVM/CLEAN/VIPER/REDUX/MVI/PRNSAASPFRUICC](https://proandroiddev.com/mvc-mvp-mvvm-clean-viper-redux-mvi-prnsaaspfruicc-building-abstractions-for-the-sake-of-building-18459ab89386)
+
 
