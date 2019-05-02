@@ -39,6 +39,9 @@ sum (1, 2, 3, 4, 5)
 
 Parameter vs Constant (in Code) - When are parameters input? Compile, Build, Run, UX(interactive) time?
 
+What is the expected life span/cycle of a given parameter?
+
+
 Property vs Class (OOP)
 
 States vs Event - which is easier to test / reason about?
