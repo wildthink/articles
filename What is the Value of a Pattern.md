@@ -8,7 +8,7 @@ What principles influence your perspective and decision?
 
 [The power of good design Dieter Rams’s ideology](https://www.vitsoe.com/us/about/good-design)
 
-
+[Architecting UIs for Change](https://joreteg.com/blog/architecting-uis-for-change)
 
 Simplicity - Cognitive Load, not complected
 
